@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Андрею 37</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     --muted: #c9ae86;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; }
+  html, body { height: 100%; touch-action: manipulation; -webkit-text-size-adjust: 100%; }
   body {
     font-family: Rubik, system-ui, sans-serif;
     color: var(--text);
@@ -465,6 +465,12 @@
     };
     loopId = requestAnimationFrame(tick);
   }
+
+  // Safari на iPhone игнорирует user-scalable=no и зумит на быстрых двойных тапах —
+  // гасим это на самом бокале и щипок по всей странице
+  wrap.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+  wrap.addEventListener('dblclick', e => e.preventDefault());
+  document.addEventListener('gesturestart', e => e.preventDefault());
 
   const phrases = ['+1', 'Буль!', 'Ещё!', '🍺', 'Пена!', 'Лей!'];
   wrap.addEventListener('pointerdown', e => {
