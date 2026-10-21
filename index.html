@@ -157,7 +157,12 @@
     position: absolute; inset: 0; border-radius: 18px; overflow: hidden;
     backface-visibility: hidden; -webkit-backface-visibility: hidden;
     box-shadow: 0 24px 50px rgba(0,0,0,.6), 0 0 0 1px rgba(243,201,105,.5);
+    transition: visibility 0s linear .25s;
   }
+  /* Safari на iPhone просвечивает слои с z-index сквозь backface-visibility,
+     поэтому невидимую сторону прячем ещё и явно — в середине переворота */
+  .card.flipped .front, .card:not(.flipped) .back { visibility: hidden; }
+  .front { transform: rotateY(0deg); }
   .front { background: #222 url(card.jpg) center / cover no-repeat; }
   .front::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.0) 40%, rgba(10,6,2,.85) 100%); }
   .front .brand { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 2; text-align: center; }
@@ -342,7 +347,7 @@
     screens[cur].classList.add('active');
     [...dots.children].forEach((d, k) => d.classList.toggle('on', k === cur));
     if (cur === 4) startGame();
-    if (cur === 5) { confetti(); musicBtn.classList.add('show'); playMusic(); }
+    if (cur === 5) { confetti(); musicBtn.classList.add('show'); if (!playing) playMusic(); }
   }
   go(0);
   document.querySelectorAll('.next').forEach(b => b.addEventListener('click', () => go(cur + 1)));
@@ -412,7 +417,8 @@
   }
   function pauseMusic() { useSynth ? synth && synth.pause() : song.pause(); playing = false; upd(); }
   function upd() { musicBtn.textContent = playing ? '🔊' : '🔇'; }
-  musicBtn.addEventListener('click', () => playing ? pauseMusic() : playMusic());
+  let userMuted = false;
+  musicBtn.addEventListener('click', () => { userMuted = playing; playing ? pauseMusic() : playMusic(); });
 
   // песня звучит только на сертификате, но «разблокируем» звук на первом тапе,
   // иначе iOS/Safari не даст включить его потом без нажатия
@@ -468,7 +474,11 @@
 
   // Safari на iPhone игнорирует user-scalable=no и зумит на быстрых двойных тапах —
   // гасим это на самом бокале и щипок по всей странице
-  wrap.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+  wrap.addEventListener('touchend', e => {
+    e.preventDefault();
+    // iPhone разрешает звук только внутри тапа — включаем песню на победном касании
+    if (done && !playing) playMusic();
+  }, { passive: false });
   wrap.addEventListener('dblclick', e => e.preventDefault());
   document.addEventListener('gesturestart', e => e.preventDefault());
 
@@ -505,7 +515,7 @@
   const code = atob('OTQxOTIzOTc3ODY2').split('').reverse().join('');
   $('#code').textContent = code.replace(/(\d{4})(?=\d)/g, '$1 ');
   const card = $('#card');
-  const flip = () => card.classList.toggle('flipped');
+  const flip = () => { card.classList.toggle('flipped'); if (!playing && !userMuted) playMusic(); };
   $('#scene').addEventListener('click', flip);
   $('#flip').addEventListener('click', flip);
   $('#copy').addEventListener('click', e => {
