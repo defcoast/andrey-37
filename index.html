@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Андрею 37</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lobster&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stout: #1a0f08;
+    --wood: #2b1a0f;
+    --amber: #e8a33a;
+    --amber-deep: #b86b12;
+    --gold: #f3c969;
+    --foam: #fff6e3;
+    --cherry: #9c1c2b;
+    --text: #fbeed6;
+    --muted: #c9ae86;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: Rubik, system-ui, sans-serif;
+    color: var(--text);
+    background: radial-gradient(ellipse at 50% 0%, #4a2a12 0%, var(--wood) 45%, var(--stout) 100%);
+    background-color: var(--stout);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* поднимающиеся пузырьки на фоне */
+  #bubbles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .bub {
+    position: absolute; bottom: -20px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,240,200,.7), rgba(243,201,105,.15) 60%, transparent 70%);
+    border: 1px solid rgba(255,230,170,.25);
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    0% { transform: translate(0, 0); opacity: 0; }
+    10% { opacity: .9; }
+    50% { transform: translate(12px, -55vh); }
+    100% { transform: translate(-8px, -110vh); opacity: 0; }
+  }
+
+  /* пена сверху */
+  .foam-top {
+    position: fixed; top: 0; left: 0; right: 0; height: 46px; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(circle at 10px 0, var(--foam) 22px, transparent 23px) 0 0 / 44px 46px repeat-x,
+      radial-gradient(circle at 32px 8px, #f4e4c1 20px, transparent 21px) 0 0 / 44px 46px repeat-x;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
+  }
+
+  #music-btn {
+    position: fixed; top: max(54px, env(safe-area-inset-top)); right: 16px; z-index: 20;
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(243,201,105,.4);
+    background: rgba(26,15,8,.7); color: var(--gold); font-size: 20px; cursor: pointer;
+    display: none; align-items: center; justify-content: center; backdrop-filter: blur(6px);
+  }
+  #music-btn.show { display: flex; }
+
+  .dots { position: fixed; bottom: max(18px, env(safe-area-inset-bottom)); left: 0; right: 0; display: flex; gap: 8px; justify-content: center; z-index: 10; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(243,201,105,.25); transition: .3s; }
+  .dots i.on { background: var(--gold); width: 22px; border-radius: 4px; }
+
+  .screen {
+    position: fixed; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 70px 16px 56px; text-align: center;
+    opacity: 0; pointer-events: none; transform: translateY(30px) scale(.98);
+    transition: opacity .7s ease, transform .7s ease;
+    overflow-y: auto;
+  }
+  .screen.active { opacity: 1; pointer-events: auto; transform: none; }
+  .inner { width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; gap: 18px; margin: auto 0; }
+
+  h1, h2, .script { font-family: Lobster, cursive; font-weight: 400; }
+  h1 { font-size: clamp(40px, 11vw, 64px); line-height: 1.05; color: var(--gold); text-shadow: 0 3px 0 var(--amber-deep), 0 8px 24px rgba(0,0,0,.5); }
+  h2 { font-size: clamp(32px, 9vw, 48px); line-height: 1.1; color: var(--gold); text-shadow: 0 2px 0 var(--amber-deep), 0 6px 18px rgba(0,0,0,.5); }
+  p { font-size: 17px; line-height: 1.55; color: var(--text); }
+  .muted { color: var(--muted); font-size: 15px; }
+
+  .big37 {
+    font-family: Rubik, sans-serif; font-weight: 900; font-size: clamp(110px, 34vw, 190px); line-height: .9;
+    background: linear-gradient(180deg, var(--foam) 0%, var(--foam) 22%, var(--gold) 23%, var(--amber) 60%, var(--amber-deep) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 6px 0 rgba(0,0,0,.35));
+    animation: bob 3s ease-in-out infinite;
+  }
+  @keyframes bob { 50% { transform: translateY(-8px) rotate(-2deg); } }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .tag { border: 1px solid rgba(243,201,105,.4); border-radius: 999px; padding: 6px 14px; font-size: 14px; color: var(--gold); background: rgba(243,201,105,.07); }
+
+  .btn {
+    font-family: Rubik, sans-serif; font-weight: 700; font-size: 18px; letter-spacing: .02em;
+    color: var(--stout); border: none; cursor: pointer;
+    padding: 16px 30px; border-radius: 999px; margin-top: 8px;
+    background: linear-gradient(180deg, var(--gold), var(--amber) 55%, var(--amber-deep));
+    box-shadow: 0 6px 0 #7a4408, 0 12px 26px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.4);
+    transition: transform .1s, box-shadow .1s;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #7a4408, 0 6px 14px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.4); }
+  .btn.ghost { background: transparent; color: var(--gold); box-shadow: none; border: 1px solid rgba(243,201,105,.5); font-size: 15px; padding: 12px 22px; }
+
+  /* этикетка в стиле пивной/настоечной */
+  .label {
+    position: relative; width: 100%;
+    background: linear-gradient(180deg, #f6e7c4, #e9d2a0);
+    color: #3a2010; border-radius: 18px; padding: 28px 22px 24px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 0 0 3px #c99a4a, inset 0 0 0 7px #f6e7c4, inset 0 0 0 8px #a87632;
+  }
+  .label p { color: #3a2010; }
+  .label .kicker { font-size: 12px; letter-spacing: .25em; text-transform: uppercase; color: var(--cherry); font-weight: 700; }
+  .label .name { font-family: Lobster, cursive; font-size: clamp(38px, 11vw, 54px); color: #5a2a0c; line-height: 1.1; margin: 4px 0 10px; }
+  .label .rule { height: 2px; background: repeating-linear-gradient(90deg, #a87632 0 8px, transparent 8px 14px); margin: 14px 0; }
+  .label .stamp {
+    position: absolute; top: -22px; right: -8px; width: 74px; height: 74px; border-radius: 50%;
+    background: var(--cherry); color: var(--foam); display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 12px; line-height: 1.1; text-transform: uppercase; transform: rotate(14deg);
+    box-shadow: 0 6px 14px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.25); border: 2px dashed rgba(255,246,227,.5);
+  }
+  .emoji { font-size: 54px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
+
+  .wishes { list-style: none; width: 100%; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .wishes li {
+    display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-radius: 14px;
+    background: rgba(243,201,105,.08); border: 1px solid rgba(243,201,105,.2);
+    font-size: 16px; line-height: 1.35;
+    opacity: 0; transform: translateX(-16px);
+  }
+  .screen.active .wishes li { animation: slidein .5s forwards; }
+  .wishes li b { color: var(--gold); }
+  .wishes li span:first-child { font-size: 26px; }
+  @keyframes slidein { to { opacity: 1; transform: none; } }
+
+  /* игра */
+  #mug-wrap { position: relative; width: min(64vw, 260px); cursor: pointer; touch-action: manipulation; }
+  #mug { width: 100%; display: block; filter: drop-shadow(0 18px 30px rgba(0,0,0,.55)); transition: transform .08s; }
+  #mug-wrap.tap #mug { transform: scale(.94) rotate(-3deg); }
+  .plus {
+    position: absolute; font-family: Lobster, cursive; font-size: 28px; color: var(--foam);
+    text-shadow: 0 2px 6px rgba(0,0,0,.6); pointer-events: none; animation: plus .9s ease-out forwards;
+  }
+  @keyframes plus { to { transform: translateY(-80px) scale(1.4); opacity: 0; } }
+  .meter { width: min(80vw, 320px); height: 14px; border-radius: 999px; background: rgba(0,0,0,.4); border: 1px solid rgba(243,201,105,.3); overflow: hidden; }
+  .meter div { height: 100%; width: 0; background: linear-gradient(90deg, var(--amber-deep), var(--gold)); border-radius: 999px; transition: width .1s linear; }
+  #hint { min-height: 24px; font-weight: 500; color: var(--gold); }
+
+  /* сертификат */
+  .scene { width: min(92vw, 440px); aspect-ratio: 1312 / 784; perspective: 1400px; cursor: pointer; }
+  .card { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .9s cubic-bezier(.3,1.4,.5,1); }
+  .card.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; border-radius: 18px; overflow: hidden;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    box-shadow: 0 24px 50px rgba(0,0,0,.6), 0 0 0 1px rgba(243,201,105,.5);
+  }
+  .front { background: #222 url(card.jpg) center / cover no-repeat; }
+  .front::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.0) 40%, rgba(10,6,2,.85) 100%); }
+  .front .brand { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 2; text-align: center; }
+  .front .brand .t { font-family: Lobster, cursive; font-size: clamp(26px, 7.5vw, 40px); color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.8); line-height: 1; }
+  .front .brand .s { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-top: 6px; font-weight: 700; }
+  .front .corner { position: absolute; top: 12px; left: 12px; z-index: 2; background: rgba(10,6,2,.7); color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(243,201,105,.5); }
+  .shine { position: absolute; inset: 0; z-index: 3; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.35) 45%, transparent 60%); background-size: 250% 100%; animation: shine 3.5s ease-in-out infinite; pointer-events: none; }
+  @keyframes shine { 0% { background-position: 150% 0; } 60%, 100% { background-position: -100% 0; } }
+  .back {
+    transform: rotateY(180deg);
+    background:
+      radial-gradient(circle at 20% 10%, rgba(243,201,105,.18), transparent 50%),
+      linear-gradient(145deg, #2a170a, #120a04);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px;
+  }
+  .back::before { content: ""; position: absolute; inset: 8px; border: 1px solid rgba(243,201,105,.45); border-radius: 12px; pointer-events: none; }
+  .back .kick { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+  .back .ttl { font-family: Lobster, cursive; font-size: clamp(22px, 6vw, 30px); color: var(--gold); }
+  .code {
+    font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: clamp(20px, 6.4vw, 30px); letter-spacing: .08em;
+    color: var(--foam); background: rgba(0,0,0,.45); border: 1px dashed rgba(243,201,105,.6);
+    padding: 10px 16px; border-radius: 10px; user-select: all; -webkit-user-select: all;
+  }
+  .copy { position: relative; z-index: 2; font: 600 13px Rubik, sans-serif; color: var(--stout); background: var(--gold); border: none; border-radius: 999px; padding: 8px 16px; cursor: pointer; }
+  .cert-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+
+  .reveal { animation: pop .9s cubic-bezier(.3,1.5,.5,1) both; }
+  @keyframes pop { from { transform: scale(.3) rotate(-12deg); opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="bubbles"></div>
+<div class="foam-top"></div>
+<canvas id="confetti"></canvas>
+<button id="music-btn" aria-label="Музыка">🔊</button>
+
+<!-- Песня: положи файл song.mp3 рядом с index.html. Пока его нет — играет встроенная мелодия-заглушка. -->
+<audio id="song" src="song.mp3" loop preload="auto"></audio>
+
+<!-- 0. Старт -->
+<section class="screen active" data-i="0">
+  <div class="inner">
+    <div class="muted" style="letter-spacing:.3em;text-transform:uppercase;font-size:12px">Специальный разлив</div>
+    <h1>Андрей,<br>с днём рождения!</h1>
+    <div class="big37">37</div>
+    <p>Выдержка — 37 лет.<br>Крепость — отличная. Вкус — легендарный.</p>
+    <button class="btn" id="start">Открыть 🍺</button>
+  </div>
+</section>
+
+<!-- 1. Рюмка -->
+<section class="screen" data-i="1">
+  <div class="inner">
+    <div class="label">
+      <div class="stamp">Бар<br>№1</div>
+      <div class="kicker">Тост первый</div>
+      <div class="name">«Рюмка»</div>
+      <div class="rule"></div>
+      <p>Пусть в «Рюмке» никогда не пустеют рюмки, а гости заходят «на одну» и остаются до закрытия.</p>
+      <p style="margin-top:10px">Полный зал, звон стопок и настойки, о которых говорит весь город. Процветания, Андрей!</p>
+    </div>
+    <div class="emoji">🥃🥃🥃</div>
+    <button class="btn next">Выпить и дальше</button>
+  </div>
+</section>
+
+<!-- 2. Дорогая, я в гараж -->
+<section class="screen" data-i="2">
+  <div class="inner">
+    <div class="label">
+      <div class="stamp">Свежий<br>разлив</div>
+      <div class="kicker">Тост второй</div>
+      <div class="name">«Дорогая,<br>я в гараж»</div>
+      <div class="rule"></div>
+      <p>Пусть эта фраза станет самой популярной в городе! Кран не пересыхает, пена стоит шапкой, а каждый, кто сказал «я в гараж», приходит именно к тебе.</p>
+    </div>
+    <div class="emoji">🍺🔧🍺</div>
+    <button class="btn next">Повторить!</button>
+  </div>
+</section>
+
+<!-- 3. Пожелания -->
+<section class="screen" data-i="3">
+  <div class="inner">
+    <h2>И лично тебе, Андрей</h2>
+    <ul class="wishes">
+      <li style="animation-delay:.1s"><span>💪</span><span>Здоровья — <b>крепкого, как лучшая настойка</b></span></li>
+      <li style="animation-delay:.25s"><span>🍀</span><span>Удачи — <b>разливной, без ограничений</b></span></li>
+      <li style="animation-delay:.4s"><span>💰</span><span>Денег — <b>как пены в свежем бокале</b></span></li>
+      <li style="animation-delay:.55s"><span>🤝</span><span>Друзей — <b>проверенных, с хорошей выдержкой</b></span></li>
+      <li style="animation-delay:.7s"><span>😄</span><span>Настроения — <b>нефильтрованного</b></span></li>
+    </ul>
+    <button class="btn next">А где подарок?</button>
+  </div>
+</section>
+
+<!-- 4. Игра -->
+<section class="screen" data-i="4">
+  <div class="inner">
+    <h2>Подарок — на дне бокала</h2>
+    <p>Налей до краёв! Жми на бокал как можно чаще — пена оседает, если остановишься.</p>
+    <div id="mug-wrap">
+      <svg id="mug" viewBox="0 0 220 250" aria-label="Бокал пива">
+        <defs>
+          <clipPath id="glass"><path d="M40 40 H160 L150 228 Q149 236 140 236 H60 Q51 236 50 228 Z"/></clipPath>
+          <linearGradient id="beer" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="#f7c046"/><stop offset="1" stop-color="#c0700f"/>
+          </linearGradient>
+          <linearGradient id="gl" x1="0" x2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".25" stop-color="#fff" stop-opacity=".05"/>
+            <stop offset=".8" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".2"/>
+          </linearGradient>
+        </defs>
+        <path d="M158 80 Q205 82 200 135 Q196 182 150 182" fill="none" stroke="rgba(255,240,210,.55)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M158 80 Q205 82 200 135 Q196 182 150 182" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4" stroke-linecap="round"/>
+        <g clip-path="url(#glass)">
+          <rect x="0" y="0" width="220" height="250" fill="rgba(255,240,210,.06)"/>
+          <g id="liquid" transform="translate(0,196)">
+            <rect x="0" y="0" width="220" height="260" fill="url(#beer)"/>
+            <g id="inner-bubbles"></g>
+            <g id="foam" fill="#fff6e3">
+              <rect x="0" y="-6" width="220" height="16"/>
+              <circle cx="48" cy="-6" r="12"/><circle cx="70" cy="-10" r="14"/><circle cx="96" cy="-7" r="13"/>
+              <circle cx="122" cy="-11" r="15"/><circle cx="146" cy="-6" r="12"/><circle cx="162" cy="-4" r="10"/>
+            </g>
+          </g>
+        </g>
+        <path d="M40 40 H160 L150 228 Q149 236 140 236 H60 Q51 236 50 228 Z" fill="url(#gl)" stroke="rgba(255,240,210,.7)" stroke-width="4" stroke-linejoin="round"/>
+        <g id="overflow" fill="#fff6e3" opacity="0">
+          <circle cx="50" cy="38" r="16"/><circle cx="76" cy="28" r="20"/><circle cx="104" cy="22" r="22"/>
+          <circle cx="132" cy="28" r="20"/><circle cx="156" cy="38" r="16"/><path d="M152 40 q8 20 2 40 q-6 -10 -10 -38z"/>
+        </g>
+      </svg>
+    </div>
+    <div class="meter"><div id="meter"></div></div>
+    <div id="hint">Жми!</div>
+  </div>
+</section>
+
+<!-- 5. Сертификат -->
+<section class="screen" data-i="5">
+  <div class="inner">
+    <h2>Твой подарок!</h2>
+    <p class="muted">Нажми на сертификат, чтобы перевернуть</p>
+    <div class="scene reveal" id="scene">
+      <div class="card" id="card">
+        <div class="face front">
+          <div class="corner">Подарочный сертификат</div>
+          <div class="brand"><div class="t">Первый парфюмерный</div><div class="s">для Андрея · 37</div></div>
+          <div class="shine"></div>
+        </div>
+        <div class="face back">
+          <div class="kick">Первый парфюмерный</div>
+          <div class="ttl">Промокод</div>
+          <div class="code" id="code"></div>
+          <button class="copy" id="copy">Скопировать</button>
+        </div>
+      </div>
+    </div>
+    <div class="cert-actions">
+      <button class="btn" id="flip">Перевернуть ↻</button>
+    </div>
+    <p class="script" style="font-size:26px;color:var(--gold)">С днём рождения, Андрей! 🍻</p>
+  </div>
+</section>
+
+<div class="dots" id="dots"></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const screens = [...document.querySelectorAll('.screen')];
+  const dots = $('#dots');
+  screens.forEach(() => dots.appendChild(document.createElement('i')));
+  let cur = 0;
+
+  function go(i) {
+    screens[cur].classList.remove('active');
+    cur = i;
+    screens[cur].classList.add('active');
+    [...dots.children].forEach((d, k) => d.classList.toggle('on', k === cur));
+    if (cur === 4) startGame();
+    if (cur === 5) { confetti(); musicBtn.classList.add('show'); playMusic(); }
+  }
+  go(0);
+  document.querySelectorAll('.next').forEach(b => b.addEventListener('click', () => go(cur + 1)));
+
+  // фоновые пузырьки
+  const bubbles = $('#bubbles');
+  for (let i = 0; i < 28; i++) {
+    const b = document.createElement('div');
+    const s = 4 + Math.random() * 14;
+    b.className = 'bub';
+    b.style.cssText = `left:${Math.random()*100}%;width:${s}px;height:${s}px;animation-duration:${6+Math.random()*9}s;animation-delay:${-Math.random()*12}s`;
+    bubbles.appendChild(b);
+  }
+
+  // ---------- музыка ----------
+  const song = $('#song');
+  const musicBtn = $('#music-btn');
+  let useSynth = false, synth = null, playing = false;
+
+  song.addEventListener('error', () => { useSynth = true; });
+
+  // заглушка: «Happy Birthday» на Web Audio, пока нет song.mp3
+  function makeSynth() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC();
+    const master = ctx.createGain(); master.gain.value = .18; master.connect(ctx.destination);
+    const N = { G4:392, A4:440, B4:493.9, C5:523.3, D5:587.3, E5:659.3, F5:698.5, G5:784 };
+    const tune = [
+      ['G4',.75],['G4',.25],['A4',1],['G4',1],['C5',1],['B4',2],
+      ['G4',.75],['G4',.25],['A4',1],['G4',1],['D5',1],['C5',2],
+      ['G4',.75],['G4',.25],['G5',1],['E5',1],['C5',1],['B4',1],['A4',2],
+      ['F5',.75],['F5',.25],['E5',1],['C5',1],['D5',1],['C5',3]
+    ];
+    const beat = .36;
+    let timer = null;
+    function note(f, t, d) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + .02);
+      g.gain.exponentialRampToValueAtTime(.001, t + d * .95);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + d);
+      // бас «умпа»
+      const b = ctx.createOscillator(), bg = ctx.createGain();
+      b.type = 'sine'; b.frequency.value = f / 4;
+      bg.gain.setValueAtTime(.5, t); bg.gain.exponentialRampToValueAtTime(.001, t + Math.min(d, .3));
+      b.connect(bg); bg.connect(master); b.start(t); b.stop(t + .32);
+    }
+    function loop() {
+      let t = ctx.currentTime + .1;
+      tune.forEach(([n, l]) => { note(N[n], t, l * beat); t += l * beat; });
+      timer = setTimeout(loop, (t - ctx.currentTime + 1) * 1000);
+    }
+    return {
+      play() { ctx.resume(); if (!timer) loop(); },
+      pause() { ctx.suspend(); }
+    };
+  }
+
+  function playMusic() {
+    if (!useSynth) {
+      // если браузер не дал включить звук сам — кнопка 🔇 остаётся, по тапу заиграет
+      song.play().then(() => { playing = true; upd(); }).catch(() => { playing = false; upd(); });
+      return;
+    }
+    synth = synth || makeSynth();
+    synth.play(); playing = true; upd();
+  }
+  function pauseMusic() { useSynth ? synth && synth.pause() : song.pause(); playing = false; upd(); }
+  function upd() { musicBtn.textContent = playing ? '🔊' : '🔇'; }
+  musicBtn.addEventListener('click', () => playing ? pauseMusic() : playMusic());
+
+  // песня звучит только на сертификате, но «разблокируем» звук на первом тапе,
+  // иначе iOS/Safari не даст включить его потом без нажатия
+  $('#start').addEventListener('click', () => {
+    song.muted = true;
+    song.play().then(() => { song.pause(); song.currentTime = 0; song.muted = false; }).catch(() => { song.muted = false; });
+    go(1);
+  });
+
+  // ---------- игра с бокалом ----------
+  const liquid = $('#liquid'), meter = $('#meter'), hint = $('#hint'), wrap = $('#mug-wrap');
+  const overflow = $('#overflow'), innerB = $('#inner-bubbles');
+  const TOP = 44, BOTTOM = 236;
+  let level = 0, done = false, loopId = null, last = 0;
+
+  for (let i = 0; i < 14; i++) {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('r', 1.5 + Math.random() * 2.5);
+    c.setAttribute('fill', 'rgba(255,245,220,.6)');
+    c.dataset.x = 55 + Math.random() * 90; c.dataset.y = Math.random() * 200; c.dataset.v = .4 + Math.random();
+    innerB.appendChild(c);
+  }
+
+  function render() {
+    const y = BOTTOM - (BOTTOM - TOP) * Math.max(level, .04) / 100;
+    liquid.setAttribute('transform', `translate(0,${y})`);
+    meter.style.width = level + '%';
+  }
+
+  function startGame() {
+    if (loopId) return;
+    last = performance.now();
+    const tick = now => {
+      const dt = (now - last) / 1000; last = now;
+      if (!done) {
+        level = Math.max(0, level - dt * 7);   // пена оседает
+        render();
+        if (level > 85) hint.textContent = 'Ещё чуть-чуть!!!';
+        else if (level > 55) hint.textContent = 'Почти полный!';
+        else if (level > 20) hint.textContent = 'Быстрее! Пена оседает';
+      }
+      innerB.childNodes.forEach(c => {
+        let y = +c.dataset.y - c.dataset.v;
+        if (y < 0) y = 220;
+        c.dataset.y = y;
+        c.setAttribute('cx', +c.dataset.x + Math.sin(y / 12) * 2);
+        c.setAttribute('cy', y);
+      });
+      loopId = requestAnimationFrame(tick);
+    };
+    loopId = requestAnimationFrame(tick);
+  }
+
+  const phrases = ['+1', 'Буль!', 'Ещё!', '🍺', 'Пена!', 'Лей!'];
+  wrap.addEventListener('pointerdown', e => {
+    if (done) return;
+    level = Math.min(100, level + 4);
+    render();
+    wrap.classList.remove('tap'); void wrap.offsetWidth; wrap.classList.add('tap');
+    setTimeout(() => wrap.classList.remove('tap'), 90);
+    const r = wrap.getBoundingClientRect();
+    const p = document.createElement('div');
+    p.className = 'plus';
+    p.textContent = phrases[Math.random() * phrases.length | 0];
+    p.style.left = (e.clientX - r.left - 14) + 'px';
+    p.style.top = (e.clientY - r.top - 20) + 'px';
+    wrap.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+    if (navigator.vibrate) navigator.vibrate(12);
+    if (level >= 100) win();
+  });
+
+  function win() {
+    done = true;
+    hint.textContent = 'Полный! Наздоровье! 🍻';
+    overflow.style.transition = 'opacity .4s';
+    overflow.setAttribute('opacity', '1');
+    confetti();
+    setTimeout(() => go(5), 1600);
+  }
+
+  // ---------- сертификат ----------
+  // промокод не лежит в исходнике открытым текстом (репозиторий публичный)
+  const code = atob('OTQxOTIzOTc3ODY2').split('').reverse().join('');
+  $('#code').textContent = code.replace(/(\d{4})(?=\d)/g, '$1 ');
+  const card = $('#card');
+  const flip = () => card.classList.toggle('flipped');
+  $('#scene').addEventListener('click', flip);
+  $('#flip').addEventListener('click', flip);
+  $('#copy').addEventListener('click', e => {
+    e.stopPropagation();
+    const ok = () => { e.target.textContent = 'Скопировано ✓'; setTimeout(() => e.target.textContent = 'Скопировать', 1800); };
+    if (navigator.clipboard) navigator.clipboard.writeText(code).then(ok, ok);
+    else { const t = document.createElement('textarea'); t.value = code; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); ok(); }
+  });
+
+  // ---------- конфетти (капли пива, пена, хмель) ----------
+  const cv = $('#confetti'), cx = cv.getContext('2d');
+  let parts = [], raf = null;
+  function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
+  resize(); addEventListener('resize', resize);
+  function confetti() {
+    const colors = ['#f3c969', '#e8a33a', '#fff6e3', '#9c1c2b', '#6b8e23'];
+    for (let i = 0; i < 160; i++) parts.push({
+      x: innerWidth / 2 + (Math.random() - .5) * 120, y: innerHeight * .45,
+      vx: (Math.random() - .5) * 14, vy: -6 - Math.random() * 12,
+      r: 3 + Math.random() * 6, c: colors[Math.random() * colors.length | 0],
+      a: Math.random() * 6, va: (Math.random() - .5) * .3, life: 1
+    });
+    if (!raf) raf = requestAnimationFrame(draw);
+  }
+  function draw() {
+    const d = devicePixelRatio;
+    cx.clearRect(0, 0, cv.width, cv.height);
+    parts.forEach(p => {
+      p.vy += .32; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; p.life -= .006;
+      cx.save(); cx.translate(p.x * d, p.y * d); cx.rotate(p.a); cx.globalAlpha = Math.max(p.life, 0);
+      cx.fillStyle = p.c; cx.fillRect(-p.r * d, -p.r * d * .5, p.r * 2 * d, p.r * d);
+      cx.restore();
+    });
+    parts = parts.filter(p => p.life > 0 && p.y < innerHeight + 40);
+    raf = parts.length ? requestAnimationFrame(draw) : (cx.clearRect(0, 0, cv.width, cv.height), null);
+  }
+})();
+</script>
+</body>
+</html>
